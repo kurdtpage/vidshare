@@ -7,6 +7,7 @@ const info = document.getElementById('info');
 const totalTime = document.getElementById('totalTime');
 const pausedid = document.getElementById('paused');
 const chat = document.getElementById('chat');
+const chatInput = document.getElementById('chatinput');
 const username = document.getElementById('username');
 const usertext = document.getElementById('usertext');
 const v = new URLSearchParams(window.location.search).get('v');
@@ -209,6 +210,14 @@ document.addEventListener('keydown', function(event) {
 setInterval(function() {
 	getData();
 }, 1000);
+
+chatInput.addEventListener('mouseenter', function() {
+	this.style.opacity = '1'; // Set opacity to 100% when mouse enters
+});
+
+chatInput.addEventListener('mouseleave', function() {
+	this.style.opacity = '0.05'; // Set opacity to 1% when mouse leaves
+});
 
 resize();
 getData(); //get initial state
