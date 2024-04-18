@@ -117,7 +117,7 @@ function getData() {
 						} else {
 							const newchat = document.createElement('div');
 							newchat.setAttribute('id', data.usertime);
-							newchat.innerHTML = data.username + ': ' + data.usertext;
+							newchat.innerText = data.username + ': ' + data.usertext;
 							chat.appendChild(newchat);
 
 							// Automatically hide the newchat div after 10 seconds

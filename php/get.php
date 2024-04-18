@@ -29,7 +29,7 @@ $data = [
 if ($debug) $response['sql']['video'] = $pdo->niceQuery($sql, $data);
 $stmt = $pdo->run($sql, $data);
 
-while ($movie = $stmt->fetch()) {
+if ($movie = $stmt->fetch()) {
 	$response['video'] = $movie;
 }
 
