@@ -17,13 +17,14 @@
 
 	$files = array();
 	foreach (scandir($directory) as $file) {
+		$vttFilename = $directory . '/' . pathinfo("$directory/$file", PATHINFO_FILENAME) . '.vtt';
 		if (in_array(pathinfo($file, PATHINFO_EXTENSION), $allowedFiles)) {
 			$files[] = $file;
 
 			$sql = 'INSERT IGNORE INTO movie (moviename, paused, currentTime) VALUES (:v, 0, 0)';
 			$data = ['v' => $file];
 			$stmt = $pdo->run($sql, $data);
-		} elseif (pathinfo($file, PATHINFO_EXTENSION) == 'srt') {
+		} elseif (pathinfo($file, PATHINFO_EXTENSION) == 'srt' && !file_exists($vttFilename)) {
 			// Read the contents of the file
 			if ($inputText = file_get_contents("$directory/$file")) {
 				// Replace commas with periods for time formatting
@@ -54,8 +55,7 @@
 				$outputText = 'WEBVTT' . "\n\n" . $outputText;
 
 				// Write the new contents back to the file with .vtt extension
-				$newFilename = $directory . '/' . pathinfo("$directory/$file", PATHINFO_FILENAME) . '.vtt';
-				file_put_contents($newFilename, $outputText);
+				file_put_contents($vttFilename, $outputText);
 			}
 		}
 	}
