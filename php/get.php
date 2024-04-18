@@ -26,7 +26,7 @@ $data = [
 	'v' => $_GET['v']
 ];
 
-if ($debug) $response['sql']['video'] = niceQuery($sql, $data);
+if ($debug) $response['sql']['video'] = $pdo->niceQuery($sql, $data);
 $stmt = $pdo->run($sql, $data);
 
 while ($movie = $stmt->fetch()) {
@@ -48,7 +48,7 @@ Where
 $data = [
 	'v' => $_GET['v']
 ];
-if ($debug) $response['sql']['chat'] = niceQuery($sql, $data);
+if ($debug) $response['sql']['chat'] = $pdo->niceQuery($sql, $data);
 $stmt = $pdo->run($sql, $data);
 
 while ($chat = $stmt->fetch()) {

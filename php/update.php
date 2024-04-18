@@ -25,7 +25,7 @@ $data = [
 	'v' => $_POST['v']
 ];
 
-if ($debug) $response['sql'][] = niceQuery($sql, $data);
+if ($debug) $response['sql'][] = $pdo->niceQuery($sql, $data);
 $stmt = $pdo->run($sql, $data);
 
 if (!empty($_POST['usertext'])) {
@@ -37,7 +37,7 @@ if (!empty($_POST['usertext'])) {
 		'v' => $_POST['v']
 	];
 
-	if ($debug) $response['sql'][] = niceQuery($sql, $data);
+	if ($debug) $response['sql'][] = $pdo->niceQuery($sql, $data);
 	$stmt = $pdo->run($sql, $data);
 	if($movie = $stmt->fetch()){
 		$movieid = $movie['id'];
@@ -56,7 +56,7 @@ if (!empty($_POST['usertext'])) {
 		'usertime' => $_POST['usertime'],
 	];
 
-	if ($debug) $response['sql'][] = niceQuery($sql, $data);
+	if ($debug) $response['sql'][] = $pdo->niceQuery($sql, $data);
 	$stmt = $pdo->run($sql, $data);
 }
 
