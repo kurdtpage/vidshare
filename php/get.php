@@ -53,7 +53,7 @@ $stmt = $pdo->run($sql, $data);
 
 while ($chat = $stmt->fetch()) {
 	$response['chat'][] = [
-		'username' => $chat['username'],
+		'username' => $chat['username'] == '' ? 'Anonymous' : $chat['username'],
 		'usertext' => $chat['usertext'],
 		'usertime' => $chat['usertime']
 	];

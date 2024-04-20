@@ -50,7 +50,7 @@ if (!empty($_POST['usertext'])) {
 		)';
 		$data = [
 			'movie' => $movieid,
-			'username' => $_POST['username'],
+			'username' => $_POST['username'] == '' ? 'Anonymous' : $_POST['username'],
 			'usertext' => $_POST['usertext'],
 			'usertime' => $_POST['usertime'],
 		];

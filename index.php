@@ -1,8 +1,8 @@
 <?php
 	$allowedFiles = array(
-		'avi',
-		'mkv',
-		'mov',
+		//'avi',
+		//'mkv',
+		//'mov',
 		'mp4',
 	);
 	$columns = 4;
@@ -57,6 +57,16 @@
 				// Write the new contents back to the file with .vtt extension
 				file_put_contents($vttFilename, $outputText);
 			}
+/*
+		} elseif (pathinfo($file, PATHINFO_EXTENSION) == 'mkv') {
+			$outputfile = pathinfo($file, PATHINFO_FILENAME) . '.mp4';
+			$output = null;
+			$retval = null;
+			exec(escapeshellcmd('ffmpeg -i ' . $file . ' ' . $outputfile), $output, $retval);
+			if ($output === 0) {
+				$files[] = $outputfile;
+			}
+*/
 		}
 	}
 

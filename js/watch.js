@@ -194,13 +194,18 @@ usertext.addEventListener('keydown', function(event) {
 /**
  * Allows local user to skip back or forward in the video
  */
-document.addEventListener('keydown', function(event) {
+container.addEventListener('keydown', function(event) {
 	if (event.key === 'ArrowLeft') {
 		// Left arrow key pressed
 		vid.currentTime = vid.currentTime - 5;
 	} else if (event.key === 'ArrowRight') {
 		// Right arrow key pressed
 		vid.currentTime = vid.currentTime + 5;
+	} else if (event.key === 'Space' || event.key === ' ') {
+		// Space key pressed
+		playPause();
+	} else {
+		console.log(event.key);
 	}
 });
 
