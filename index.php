@@ -1,30 +1,57 @@
 <?php
-	$allowedFiles = array(
-		//'avi',
-		//'mkv',
-		//'mov',
-		'mp4',
-	);
 	$columns = 4;
-
 	$directory = dirname(__FILE__) . '/movies';
 
 	if (!is_dir($directory)) {
 		exit("Invalid directory path: $directory");
 	}
 
+	function extractWords($str = '', $numWords = 3)
+	{
+		// Split the string into words
+		$words = explode(' ', $str);
+
+		// Take the first three words
+		$firstThreeWords = array_slice($words, 0, $numWords);
+
+		// Join the words back into a string
+		$result = implode(' ', $firstThreeWords);
+
+		return $result;
+	}
+
 	require_once 'php/inc/connect.php';
 
 	$files = array();
 	foreach (scandir($directory) as $file) {
+		$extension = pathinfo($file, PATHINFO_EXTENSION);
 		$vttFilename = $directory . '/' . pathinfo("$directory/$file", PATHINFO_FILENAME) . '.vtt';
-		if (in_array(pathinfo($file, PATHINFO_EXTENSION), $allowedFiles)) {
+
+		if ($extension == 'mp4') {
 			$files[] = $file;
 
 			$sql = 'INSERT IGNORE INTO movie (moviename, paused, currentTime) VALUES (:v, 0, 0)';
 			$data = ['v' => $file];
 			$stmt = $pdo->run($sql, $data);
-		} elseif (pathinfo($file, PATHINFO_EXTENSION) == 'srt' && !file_exists($vttFilename)) {
+		} elseif (in_array($extension, ['mkv', 'm4v', 'avi', 'mov', 'flv'])) {
+			/* The <video> element can only read .mp4 media files, so need to convert it */
+			// Assuming $file contains the input file path
+			$inputFile = $directory . '/' . $file;
+			$outputFile = $directory . '/' . pathinfo($file, PATHINFO_FILENAME) . '.mp4';
+
+			if (file_exists($outputFile)) {
+				// Add the output file to the list if successful
+				$files[] = $file;
+				unlink($inputFile);
+			} else {
+				// Command to execute ffmpeg in the background
+				$command = "ffmpeg -i '$inputFile' '$outputFile' >/dev/null 2>&1 &";
+
+				// Open a process to execute the command
+				$process = proc_open($command, [], $pipes);
+			}
+		} elseif ($extension == 'srt' && !file_exists($vttFilename)) {
+			/* The <video> element can only read .vtt subtitles files, and not .srt, so need to convert it */
 			// Read the contents of the file
 			if ($inputText = file_get_contents("$directory/$file")) {
 				// Replace commas with periods for time formatting
@@ -57,16 +84,6 @@
 				// Write the new contents back to the file with .vtt extension
 				file_put_contents($vttFilename, $outputText);
 			}
-/*
-		} elseif (pathinfo($file, PATHINFO_EXTENSION) == 'mkv') {
-			$outputfile = pathinfo($file, PATHINFO_FILENAME) . '.mp4';
-			$output = null;
-			$retval = null;
-			exec(escapeshellcmd('ffmpeg -i ' . $file . ' ' . $outputfile), $output, $retval);
-			if ($output === 0) {
-				$files[] = $outputfile;
-			}
-*/
 		}
 	}
 
@@ -83,12 +100,20 @@
 </head>
 <body>
 	<div class="row row-cols-1 row-cols-md-<?php echo $columns + 1; ?> g-<?php echo $columns + 1; ?>" id="thumbnailContainer">
-		<?php foreach ($files as $index => $file) { ?>
-			<?php $friendlyName = str_replace(['.', '_', '[', ']', '-', '  '], [' ', ' ', ' ', ' ', ' ', ' '], $file); ?>
+		<?php foreach ($files as $file) {
+			$friendlyName = str_replace(
+				['.', '_', '[', ']', '-', 'mp4', '  '],
+				[' ', ' ', ' ', ' ', ' ', ''   , ' ' ],
+				$file);
+			$nameid = str_replace(' ', '', $friendlyName); ?>
+			<div class="card" onclick="window.location='watch.html?v=<?php echo $file; ?>';">
+				<img class="card-img-top" id="<?php echo $nameid; ?>" alt="<?php echo $friendlyName; ?>" src="img/movie.png">
+				<div class="card-body"><h5 class="card-title"><?php echo $friendlyName; ?></h5></div>
+			</div>
 			<script>
 				// Call the function to fetch thumbnail for each file
 				window.addEventListener('DOMContentLoaded', function() {
-					fetchThumbnail('<?php echo $file; ?>', '<?php echo $friendlyName; ?>');
+					fetchThumbnail('<?php echo extractWords($friendlyName, 3); ?>', '<?php echo $nameid; ?>');
 				});
 			</script>
 		<?php } ?>
