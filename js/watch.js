@@ -28,12 +28,10 @@ function resize() {
 	const width = window.innerWidth - 5;
 	vid.width = width + 'px';
 	container.style.width = width + 'px';
-	document.getElementById('width').innerText = width + 'px';
 
 	const height = window.innerHeight - 10;
 	vid.height = height + 'px';
 	container.style.height = height + 'px';
-	document.getElementById('height').innerText = height + 'px';
 
 	if (debug) console.log(width, height);
 }
@@ -83,6 +81,33 @@ function update() {
 }
 
 /**
+ * Updates the chat div
+ * @param {object} data The response from get.php in the form of {username => '', usertext => '', usertime => ''}
+ */
+function showChat(data) {
+	const abcDiv = document.getElementById(data.usertext + data.usertime);
+	if (abcDiv) {
+		//already exists
+	} else {
+		const newchat = document.createElement('div');
+		newchat.setAttribute('id', data.usertime);
+		newchat.innerText = data.username + ': ' + data.usertext;
+		chat.appendChild(newchat);
+
+		// Automatically hide the newchat div after 10 seconds
+		setTimeout(function() {
+			newchat.style.opacity = '0'; // Set opacity to 0 to start the fade-out effect
+			newchat.style.transition = 'opacity 1s'; // Apply a transition effect to opacity property
+		}, 30000); // 10 seconds in milliseconds
+
+		// After 11 seconds, remove the div from the DOM
+		setTimeout(function() {
+			newchat.parentNode.removeChild(newchat);
+		}, 31000); // 11 seconds in milliseconds
+	}
+}
+
+/**
  * Gets data from the server (paused, currentTime)
  */
 function getData() {
@@ -108,26 +133,7 @@ function getData() {
 				//get chat stuff
 				if (typeof response.chat !== 'undefined') {
 					response.chat.forEach((data) => {
-						const abcDiv = document.getElementById(data.usertime);
-						if (abcDiv) {
-							//already exists
-						} else {
-							const newchat = document.createElement('div');
-							newchat.setAttribute('id', data.usertime);
-							newchat.innerText = data.username + ': ' + data.usertext;
-							chat.appendChild(newchat);
-
-							// Automatically hide the newchat div after 10 seconds
-							setTimeout(function() {
-								newchat.style.opacity = '0'; // Set opacity to 0 to start the fade-out effect
-								newchat.style.transition = 'opacity 1s'; // Apply a transition effect to opacity property
-							}, 10000); // 10 seconds in milliseconds
-
-							// After 11 seconds, remove the div from the DOM
-							setTimeout(function() {
-								newchat.parentNode.removeChild(newchat);
-							}, 11000); // 11 seconds in milliseconds
-						}
+						showChat(data);
 					});
 				}
 			} else {
@@ -157,7 +163,7 @@ function playPause() {
 			blocked = false;
 		}, 2000);	
 	} else {
-		console.log('BLOCKED FOR 2 SECONDS DUE TO SPAMMING PLAY/PAUSE');
+		showChat({username:'Admin', usertext:'You have been blocked for 2 seconds due to spamming play/pause', usertime:'now'});
 	}
 }
 
