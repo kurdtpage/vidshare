@@ -24,7 +24,20 @@
 	require_once 'php/inc/connect.php';
 
 	$files = array();
-	foreach (scandir($directory) as $file) {
+	$allfiles = scandir($directory);
+	//sort so files ending in .mp4 are first. Want files in $media_extensions to come AFTER the .mp4 files
+	usort($allfiles, function($a, $b) {
+		// Check if $a ends with ".mp4" and $b doesn't
+		if (substr($a, -4) === '.mp4' && substr($b, -4) !== '.mp4') {
+			return -1; // $a should come before $b
+		} elseif (substr($a, -4) !== '.mp4' && substr($b, -4) === '.mp4') {
+			return 1; // $a should come after $b
+		} else {
+			return 0; // Order remains unchanged
+		}
+	});
+
+	foreach ($allfiles as $file) {
 		$extension = pathinfo($file, PATHINFO_EXTENSION);
 		$vttFilename = $directory . pathinfo("$directory/$file", PATHINFO_FILENAME) . '.vtt';
 
@@ -46,10 +59,11 @@
 				unlink($inputFile);
 			} else {
 				// Command to execute ffmpeg in the background
-				$command = "ffmpeg -i '$inputFile' '$outputFile' >/dev/null 2>&1 &";
+				$command = "ffmpeg -i '$inputFile' '$outputFile' >/dev/null 2>&1 &"; //this will use 100% CPU for 10 minutes per file!!!!!!
 
 				// Open a process to execute the command
 				$process = proc_open($command, [], $pipes);
+				break;
 			}
 		} elseif ($extension == 'srt' && !file_exists($vttFilename)) {
 			/* The <video> element can only read .vtt subtitles files, and not .srt, so need to convert it */
