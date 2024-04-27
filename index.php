@@ -1,6 +1,7 @@
 <?php
 	$columns = 4;
-	$directory = dirname(__FILE__) . '/movies';
+	$directory = dirname(__FILE__) . '/movies/'; //must start and end with a slash
+	$media_extensions = ['mkv', 'm4v', 'avi', 'mov', 'flv', 'mpg', 'mpeg']; //these will be converted into .mp4
 
 	if (!is_dir($directory)) {
 		exit("Invalid directory path: $directory");
@@ -25,7 +26,7 @@
 	$files = array();
 	foreach (scandir($directory) as $file) {
 		$extension = pathinfo($file, PATHINFO_EXTENSION);
-		$vttFilename = $directory . '/' . pathinfo("$directory/$file", PATHINFO_FILENAME) . '.vtt';
+		$vttFilename = $directory . pathinfo("$directory/$file", PATHINFO_FILENAME) . '.vtt';
 
 		if ($extension == 'mp4') {
 			$files[] = $file;
@@ -33,11 +34,11 @@
 			$sql = 'INSERT IGNORE INTO movie (moviename, paused, currentTime) VALUES (:v, 0, 0)';
 			$data = ['v' => $file];
 			$stmt = $pdo->run($sql, $data);
-		} elseif (in_array($extension, ['mkv', 'm4v', 'avi', 'mov', 'flv'])) {
+		} elseif (in_array($extension, $media_extensions)) {
 			/* The <video> element can only read .mp4 media files, so need to convert it */
 			// Assuming $file contains the input file path
-			$inputFile = $directory . '/' . $file;
-			$outputFile = $directory . '/' . pathinfo($file, PATHINFO_FILENAME) . '.mp4';
+			$inputFile = $directory . $file;
+			$outputFile = $directory . pathinfo($file, PATHINFO_FILENAME) . '.mp4';
 
 			if (file_exists($outputFile)) {
 				// Add the output file to the list if successful
@@ -53,7 +54,7 @@
 		} elseif ($extension == 'srt' && !file_exists($vttFilename)) {
 			/* The <video> element can only read .vtt subtitles files, and not .srt, so need to convert it */
 			// Read the contents of the file
-			if ($inputText = file_get_contents("$directory/$file")) {
+			if ($inputText = file_get_contents($directory . $file)) {
 				// Replace commas with periods for time formatting
 				$inputText = preg_replace('/(\d{2}):(\d{2}):(\d{2}),(\d{3})/', '$1:$2:$3.$4', $inputText);
 
@@ -65,21 +66,21 @@
 				foreach ($lines as $line) {
 					if (preg_match('/^\d+\s*$/', $line)) {
 						// Chapter number
-						$outputText .= $line . "\n";
+						$outputText .= $line . "\r\n";
 					} elseif (strpos($line, '-->') !== false) {
 						// Time line
-						$outputText .= $line . "\n";
+						$outputText .= $line . "\r\n";
 					} elseif (!empty($line)) {
 						// Subtitle line
-						$outputText .= $line . "\n";
+						$outputText .= $line . "\r\n";
 					} else {
 						// Empty line
-						$outputText .= "\n";
+						$outputText .= "\r\n";
 					}
 				}
 
 				// Add WEBVTT header
-				$outputText = 'WEBVTT' . "\n\n" . $outputText;
+				$outputText = 'WEBVTT' . "\r\n\r\n" . $outputText;
 
 				// Write the new contents back to the file with .vtt extension
 				file_put_contents($vttFilename, $outputText);

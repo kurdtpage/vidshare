@@ -8,23 +8,17 @@
 </head>
 <body>
 	<div id="video-container">
-		<video id="vid" width="1024" height="768" controls onclick="playPause()">
+		<video id="vid" width="1024" height="768" controls>
 			<source id="source" type="video/mp4">
 			<track id="track" label="English" srclang="en" kind="subtitles" default>
 			Your browser does not support HTML5 video.
 		</video>
 		<div id="chat"></div>
 	</div>
-	<div id="chatinput" style="opacity:0.05">
+
+	<div id="chatinput">
 		<input type="text" id="username" placeholder="Username">
 		<input type="text" id="usertext" placeholder="Type something...">
-	</div>
-
-	<div id="info" style="display:none">
-		<div>Total time:<span id="totalTime"></span></div>
-		<div>Paused:<span id="paused">1</span></div>
-		<div>Width:<span id="width"></span></div>
-		<div>Height:<span id="height"></span></div>
 	</div>
 
 	<script type="application/javascript" src="js/watch.js"></script>

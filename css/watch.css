@@ -35,6 +35,7 @@ body {
 	z-index: 1;
 	white-space: nowrap;
 	margin: 10px;
+	opacity: 0.05;
 }
 #username {
 	width: 18%;

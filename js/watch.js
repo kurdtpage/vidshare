@@ -1,16 +1,13 @@
 const debug = false;
+const v = new URLSearchParams(window.location.search).get('v');
 const container = document.getElementById('video-container');
 const vid = document.getElementById('vid');
 const source = document.getElementById('source');
 const track = document.getElementById('track');
-const info = document.getElementById('info');
-const totalTime = document.getElementById('totalTime');
-const pausedid = document.getElementById('paused');
 const chat = document.getElementById('chat');
 const chatInput = document.getElementById('chatinput');
 const username = document.getElementById('username');
 const usertext = document.getElementById('usertext');
-const v = new URLSearchParams(window.location.search).get('v');
 let blocked = false; //cant play/pause in rapid succession
 
 /**
@@ -155,8 +152,6 @@ function playPause() {
 
 		update();
 
-		pausedid.innerText = vid.paused ? 1 : 0;
-
 		blocked = true;
 		setTimeout(function() {
 			blocked = false;
@@ -183,15 +178,6 @@ function getCurrentDateTimeString() {
 }
 
 /**
- * Event listener for chat. Fired when Enter key is pressed
- */
-usertext.addEventListener('keydown', function(event) {
-	if (event.key === 'Enter' && usertext.value.trim() !== '') {
-		update();
-	}
-});
-
-/**
  * Allows local user to skip back or forward in the video
  */
 container.addEventListener('keydown', function(event) {
@@ -210,11 +196,11 @@ container.addEventListener('keydown', function(event) {
 });
 
 /**
- * Gets data from the server every seond, then pauses/plays and sets time accordingly
+ * Event listener for video. Fired when video is clicked. Toggles Play/Pause state
  */
-setInterval(function() {
-	getData();
-}, 1000);
+vid.addEventListener('click', function() {
+	playPause();
+});
 
 chatInput.addEventListener('mouseenter', function() {
 	this.style.opacity = '1'; // Set opacity to 100% when mouse enters
@@ -223,6 +209,22 @@ chatInput.addEventListener('mouseenter', function() {
 chatInput.addEventListener('mouseleave', function() {
 	this.style.opacity = '0.05'; // Set opacity to 1% when mouse leaves
 });
+
+/**
+ * Event listener for chat. Fired when Enter key is pressed
+ */
+usertext.addEventListener('keydown', function(event) {
+	if (event.key === 'Enter' && usertext.value.trim() !== '') {
+		update();
+	}
+});
+
+/**
+ * Gets data from the server every seond, then pauses/plays and sets time accordingly
+ */
+setInterval(function() {
+	getData();
+}, 1000);
 
 resize();
 getData(); //get initial state
