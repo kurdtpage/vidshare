@@ -41,7 +41,7 @@
 
 	foreach ($allfiles as $file) {
 		$extension = pathinfo($file, PATHINFO_EXTENSION);
-		$vttFilename = $directory . pathinfo("$directory/$file", PATHINFO_FILENAME) . '.vtt';
+		$vttFilename = $directory . pathinfo($directory . $file, PATHINFO_FILENAME) . '.vtt';
 
 		if ($extension == 'mp4') {
 			$files[] = $file;
@@ -53,7 +53,7 @@
 			/* The <video> element can only read .mp4 media files, so need to convert it */
 			// Assuming $file contains the input file path
 			$inputFile = $directory . $file;
-			$outputFile = $directory . pathinfo($file, PATHINFO_FILENAME) . '.mp4';
+			$outputFile = $directory . pathinfo($directory . $file, PATHINFO_FILENAME) . '.mp4';
 
 			if (file_exists($outputFile)) {
 				// Add the output file to the list if successful
