@@ -37,6 +37,8 @@
 		}
 	});
 
+	sort($allfiles, SORT_NATURAL | SORT_FLAG_CASE); //case insentivie sort
+
 	foreach ($allfiles as $file) {
 		$extension = pathinfo($file, PATHINFO_EXTENSION);
 		$vttFilename = $directory . pathinfo("$directory/$file", PATHINFO_FILENAME) . '.vtt';
@@ -101,8 +103,6 @@
 			}
 		}
 	}
-
-	sort($files, SORT_NATURAL | SORT_FLAG_CASE); //case insentivie sort
 ?><!DOCTYPE html>
 <html lang="en">
 <head>
@@ -121,16 +121,16 @@
 				[' ', ' ', ' ', ' ', ' ', ''   , ' ' ],
 				$file);
 			$nameid = str_replace(' ', '', $friendlyName); ?>
-			<div class="card" onclick="window.location='watch.html?v=<?php echo $file; ?>';">
+			<div class="card" onclick="watch('<?php echo $file; ?>');">
 				<img class="card-img-top" id="<?php echo $nameid; ?>" alt="<?php echo $friendlyName; ?>" src="img/movie.png">
-				<div class="card-body"><h5 class="card-title"><?php echo $friendlyName; ?></h5></div>
+				<script>
+					// Call the function to fetch thumbnail for each file
+					window.addEventListener('DOMContentLoaded', function() {
+						fetchThumbnail('<?php echo extractWords($friendlyName, 3); ?>', '<?php echo $nameid; ?>');
+					});
+				</script>
+				<div class="card-body"><h5 class="card-title"><?php echo $friendlyName; ?></h5></div>				
 			</div>
-			<script>
-				// Call the function to fetch thumbnail for each file
-				window.addEventListener('DOMContentLoaded', function() {
-					fetchThumbnail('<?php echo extractWords($friendlyName, 3); ?>', '<?php echo $nameid; ?>');
-				});
-			</script>
 		<?php } ?>
 	</div>
 

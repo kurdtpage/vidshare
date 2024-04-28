@@ -1,7 +1,6 @@
 // Define a function to fetch thumbnails asynchronously
 function fetchThumbnail(friendlyName, nameid) {
 	const xhr = new XMLHttpRequest();
-	xhr.open('GET', 'php/thumbnail.php?query=' + encodeURIComponent(friendlyName), true);
 	xhr.onreadystatechange = function() {
 		if (xhr.readyState === XMLHttpRequest.DONE) {
 			if (xhr.status === 200) {
@@ -9,14 +8,17 @@ function fetchThumbnail(friendlyName, nameid) {
 				const thumbnailUrl = xhr.responseText;
 
 				if (thumbnailUrl != '') {
-					const imgid = document.getElementById(nameid);
-					imgid.src = thumbnailUrl;
+					document.getElementById(nameid).src = thumbnailUrl;
 				}
 			} else {
 				console.error('Error fetching thumbnail:', xhr.statusText);
 			}
 		}
 	};
-
+	xhr.open('GET', 'php/thumbnail.php?query=' + encodeURIComponent(friendlyName), true);
 	xhr.send();
+}
+
+function watch (file) {
+	window.location = `watch.html?v=${file}`;
 }
