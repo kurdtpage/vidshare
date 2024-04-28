@@ -71,7 +71,7 @@ function update() {
 	formData.append('paused', vid.paused ? 1 : 0);
 	formData.append('currentTime', vid.currentTime);
 	if (usertext.value !== '') {
-		formData.append('username', username.value);
+		formData.append('username', username.value === '' ? 'Anonymous' : username.value);
 		formData.append('usertext', usertext.value);
 		formData.append('usertime', getCurrentDateTimeString());
 	}
@@ -85,12 +85,13 @@ function update() {
  * @param {object} data The response from get.php in the form of {username => '', usertext => '', usertime => ''}
  */
 function showChat(data) {
-	const abcDiv = document.getElementById(data.usertext + data.usertime);
+	const chatid = data.username + data.usertime;
+	const abcDiv = document.getElementById(chatid);
 	if (abcDiv) {
 		//already exists
 	} else {
 		const newchat = document.createElement('div');
-		newchat.setAttribute('id', data.usertime);
+		newchat.setAttribute('id', chatid);
 		newchat.innerText = data.username + ': ' + data.usertext;
 		chat.appendChild(newchat);
 
@@ -98,12 +99,12 @@ function showChat(data) {
 		setTimeout(function() {
 			newchat.style.opacity = '0'; // Set opacity to 0 to start the fade-out effect
 			newchat.style.transition = 'opacity 1s'; // Apply a transition effect to opacity property
-		}, 30000); // 10 seconds in milliseconds
+		}, 10000); // 10 seconds in milliseconds
 
 		// After 11 seconds, remove the div from the DOM
 		setTimeout(function() {
 			newchat.parentNode.removeChild(newchat);
-		}, 31000); // 11 seconds in milliseconds
+		}, 11000); // 11 seconds in milliseconds
 	}
 }
 
@@ -149,21 +150,28 @@ function getData() {
  * Toggle local playing and paused states
  */
 function playPause() {
-	if (!blocked) {
+	if (blocked) {
+		showChat({
+			username: 'Admin',
+			usertext: 'You have been blocked for 2 seconds due to spamming play/pause',
+			usertime: getCurrentDateTimeString()
+		});
+	} else {
 		if (vid.paused == 1) {
 			vid.play();
+			usertext.value = 'Playing the video';
 		} else {
 			vid.pause();
+			usertext.value = 'Paused the video';
 		}
 
 		update();
+		usertext.value = '';
 
 		blocked = true;
 		setTimeout(function() {
 			blocked = false;
-		}, 2000);	
-	} else {
-		showChat({username:'Admin', usertext:'You have been blocked for 2 seconds due to spamming play/pause', usertime:'now'});
+		}, 2000);
 	}
 }
 
@@ -184,20 +192,29 @@ function getCurrentDateTimeString() {
 }
 
 /**
- * Allows local user to skip back or forward in the video
+ * Event listener for keydown events to handle media controls and user input (chat) based on focus
  */
-container.addEventListener('keydown', function(event) {
-	if (event.key === 'ArrowLeft') {
-		// Left arrow key pressed
-		vid.currentTime = vid.currentTime - 5;
-	} else if (event.key === 'ArrowRight') {
-		// Right arrow key pressed
-		vid.currentTime = vid.currentTime + 5;
-	} else if (event.key === 'Space' || event.key === ' ') {
-		// Space key pressed
-		playPause();
-	} else {
-		console.log(event.key);
+document.addEventListener('keydown', function(event) {
+	switch (document.activeElement.id) {
+		case 'usertext':
+			if (event.key === 'Enter' && usertext.value.trim() !== '') {
+				update();
+			}
+			break;
+		default:
+			console.log('Pressed "' + event.code + '" on "' + document.activeElement.id + '"');
+			switch (event.code) {
+				case 'Space':
+					playPause();
+					break;
+				case 'ArrowLeft':
+					vid.currentTime -= 5;
+					break;
+				case 'ArrowRight':
+					vid.currentTime += 5;
+					break;
+			}
+			break;
 	}
 });
 
@@ -209,20 +226,12 @@ vid.addEventListener('click', function() {
 });
 
 chatInput.addEventListener('mouseenter', function() {
+	chatInput.focus();
 	this.style.opacity = '1'; // Set opacity to 100% when mouse enters
 });
 
-chatInput.addEventListener('mouseleave', function() {
+chatInput.addEventListener("focusout", function() {
 	this.style.opacity = '0.05'; // Set opacity to 1% when mouse leaves
-});
-
-/**
- * Event listener for chat. Fired when Enter key is pressed
- */
-usertext.addEventListener('keydown', function(event) {
-	if (event.key === 'Enter' && usertext.value.trim() !== '') {
-		update();
-	}
 });
 
 /**
