@@ -1,4 +1,4 @@
-const debug = false;
+const debug = true; //extra spam in the console
 const v = new URLSearchParams(window.location.search).get('v');
 const container = document.getElementById('video-container');
 const vid = document.getElementById('vid');
@@ -14,26 +14,12 @@ let blocked = false; //cant play/pause in rapid succession
  * Resizes the video player to fit the window
  */
 function resize() {
-	if (debug) console.log('resize()');
-	source.src = 'movies/' + v;
 	document.title = v;
-	if (debug) console.log('source.src', source.src);
 
-	const parts = v.split('.');
-	const ext = parts[parts.length - 1];
-	source.type = 'video/' + ext;
-	
+	const ext = v.split('.');
+	source.type = 'video/' + ext[ext.length - 1];
+
 	track.src = 'movies/' + sub(v);
-
-	const width = window.innerWidth - 5;
-	vid.width = width + 'px';
-	container.style.width = width + 'px';
-
-	const height = window.innerHeight - 10;
-	vid.height = height + 'px';
-	container.style.height = height + 'px';
-
-	if (debug) console.log(width, height);
 }
 
 /**
@@ -95,6 +81,7 @@ function showChat(data) {
 		newchat.innerText = data.username + ': ' + data.usertext;
 		chat.appendChild(newchat);
 
+		/*
 		// Automatically hide the newchat div after 10 seconds
 		setTimeout(function() {
 			newchat.style.opacity = '0'; // Set opacity to 0 to start the fade-out effect
@@ -105,6 +92,7 @@ function showChat(data) {
 		setTimeout(function() {
 			newchat.parentNode.removeChild(newchat);
 		}, 11000); // 11 seconds in milliseconds
+		*/
 	}
 }
 
@@ -153,7 +141,7 @@ function playPause() {
 	if (blocked) {
 		showChat({
 			username: 'Admin',
-			usertext: 'You have been blocked for 2 seconds due to spamming play/pause',
+			usertext: 'You have been blocked for 5 seconds due to spamming play/pause',
 			usertime: getCurrentDateTimeString()
 		});
 	} else {
@@ -171,7 +159,7 @@ function playPause() {
 		blocked = true;
 		setTimeout(function() {
 			blocked = false;
-		}, 2000);
+		}, 5000);
 	}
 }
 
@@ -223,6 +211,10 @@ document.addEventListener('keydown', function(event) {
  */
 vid.addEventListener('click', function() {
 	playPause();
+});
+
+vid.addEventListener('timeupdate', function() {
+	//update();
 });
 
 chatInput.addEventListener('mouseenter', function() {

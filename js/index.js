@@ -20,5 +20,5 @@ function fetchThumbnail(friendlyName, nameid) {
 }
 
 function watch (file) {
-	window.location = `watch.html?v=${file}`;
+	window.location = `watch.php?v=${file}`;
 }
