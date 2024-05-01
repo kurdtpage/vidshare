@@ -1,5 +1,4 @@
 <?php
-	$columns = 4;
 	$directory = dirname(__FILE__) . '/movies/'; //must start and end with a slash
 	$media_extensions = ['mkv', 'm4v', 'avi', 'mov', 'flv', 'mpg', 'mpeg']; //these will be converted into .mp4
 
@@ -114,7 +113,7 @@
 	<link rel="stylesheet" href="css/index.css">
 </head>
 <body>
-	<div class="row row-cols-1 row-cols-md-<?php echo $columns + 1; ?> g-<?php echo $columns + 1; ?>" id="thumbnailContainer">
+	<div style="margin:0; padding:0">
 		<?php foreach ($files as $file) {
 			$friendlyName = str_replace(
 				['.', '_', '[', ']', '-', 'mp4', '  '],
