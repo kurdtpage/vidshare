@@ -13,6 +13,8 @@ if (empty($_GET['v'])) {
 
 require_once 'inc/connect.php';
 
+$v = $_GET['v'] . '.mp4';
+
 //get movie status
 $sql = 'SELECT
 	paused,
@@ -23,7 +25,7 @@ WHERE
 	moviename = :v
 ';
 $data = [
-	'v' => $_GET['v']
+	'v' => $v
 ];
 
 if ($debug) $response['sql']['video'] = $pdo->niceQuery($sql, $data);
@@ -46,7 +48,7 @@ Where
 	STR_TO_DATE(REPLACE(REPLACE(usertime, '_', ' '), 'x', ':'), '%Y-%m-%d %H:%i:%s') >= DATE_SUB(NOW(), INTERVAL 10 SECOND)
 ";
 $data = [
-	'v' => $_GET['v']
+	'v' => $v
 ];
 if ($debug) $response['sql']['chat'] = $pdo->niceQuery($sql, $data);
 $stmt = $pdo->run($sql, $data);

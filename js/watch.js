@@ -9,29 +9,14 @@ const chatInput = document.getElementById('chatinput');
 const username = document.getElementById('username');
 const usertext = document.getElementById('usertext');
 let blocked = false; //cant play/pause in rapid succession
+let fullscreen = false;
 
 /**
- * Resizes the video player to fit the window
+ * Initialises the player
  */
-function resize() {
+function init() {
 	document.title = v;
-
-	const ext = v.split('.');
-	source.type = 'video/' + ext[ext.length - 1];
-
-	track.src = 'movies/' + sub(v);
-}
-
-/**
- * Replaces the extension (e.g. .avi or .mp4) with .vtt
- */
-function sub(v) {
-	let lastDotIndex = v.lastIndexOf(".");
-	if (lastDotIndex !== -1) {
-		return v.slice(0, lastDotIndex) + ".vtt";
-	} else {
-		return v;
-	}
+	getData(); //get initial state
 }
 
 /**
@@ -39,10 +24,10 @@ function sub(v) {
  */
 function update() {
 	const xmlhttp1 = new XMLHttpRequest();
-	xmlhttp1.onreadystatechange = function() {
+	xmlhttp1.onreadystatechange = () => {
 		if (this.readyState == 4 && this.status == 200) {
 			if (JSON.parse(this.responseText).ok) {
-				if (debug) console.log('data saved to server');
+				if (debug) console.log('Data saved to server');
 				usertext.value = '';
 			} else {
 				console.error(this.responseText);
@@ -80,19 +65,6 @@ function showChat(data) {
 		newchat.setAttribute('id', chatid);
 		newchat.innerText = data.username + ': ' + data.usertext;
 		chat.appendChild(newchat);
-
-		/*
-		// Automatically hide the newchat div after 10 seconds
-		setTimeout(function() {
-			newchat.style.opacity = '0'; // Set opacity to 0 to start the fade-out effect
-			newchat.style.transition = 'opacity 1s'; // Apply a transition effect to opacity property
-		}, 10000); // 10 seconds in milliseconds
-
-		// After 11 seconds, remove the div from the DOM
-		setTimeout(function() {
-			newchat.parentNode.removeChild(newchat);
-		}, 11000); // 11 seconds in milliseconds
-		*/
 	}
 }
 
@@ -100,97 +72,114 @@ function showChat(data) {
  * Gets data from the server (paused, currentTime)
  */
 function getData() {
-	const xmlhttp2 = new XMLHttpRequest();	
-	xmlhttp2.onreadystatechange = function() {
-		if (this.readyState == 4 && this.status == 200) {
-			const response = JSON.parse(this.responseText); // Parse the response to an array
-			if (debug) console.log(response);
-			if (response.ok) {
-				const vidpaused = vid.paused ? 1 : 0;
+	if (!fullscreen) {
+		const xmlhttp2 = new XMLHttpRequest();	
+		xmlhttp2.onreadystatechange = () => {
+			if (this.readyState == 4 && this.status == 200) {
+				const response = JSON.parse(this.responseText); // Parse the response to an array
+				//if (debug) console.log(response);
+				if (response.ok) {
+					const vidpaused = vid.paused ? 1 : 0;
 
-				//update video status from server
-				if (response.video.paused !== vidpaused) {
-					if (response.video.paused == 1) {
-						vid.pause();
-					} else {
-						vid.play();
+					//update video status from server
+					if (response.video.paused !== vidpaused) {
+						if (response.video.paused == 1) {
+							vid.pause();
+						} else {
+							vid.play();
+						}
+
+						vid.currentTime = parseFloat(response.video.currentTime);
 					}
 
-					vid.currentTime = parseFloat(response.video.currentTime);
+					//get chat stuff
+					if (typeof response.chat !== 'undefined') {
+						response.chat.forEach((data) => {
+							showChat(data);
+						});
+					}
+				} else {
+					console.error(response.error);
 				}
-
-				//get chat stuff
-				if (typeof response.chat !== 'undefined') {
-					response.chat.forEach((data) => {
-						showChat(data);
-					});
-				}
-			} else {
-				console.error(response.error);
 			}
-		}
-	};
-	xmlhttp2.open('GET', `php/get.php?v=${v}`, true);
-	xmlhttp2.send();
+		};
+		xmlhttp2.open('GET', `php/get.php?v=${v}`, true);
+		xmlhttp2.send();
+	}
 }
 
 /**
  * Toggle local playing and paused states
  */
 function playPause() {
-	if (blocked) {
-		showChat({
-			username: 'Admin',
-			usertext: 'You have been blocked for 5 seconds due to spamming play/pause',
-			usertime: getCurrentDateTimeString()
-		});
-	} else {
-		if (vid.paused == 1) {
-			vid.play();
-			usertext.value = 'Playing the video';
-		} else {
+	console.log('fullscreen', fullscreen);
+	if (fullscreen) {
+		console.log('vid.paused', vid.paused);
+		if (vid.paused || vid.paused == 1) {
+			console.log('Pausing video');
 			vid.pause();
-			usertext.value = 'Paused the video';
+		} else {
+			console.log('Playing video');
+			vid.play();
 		}
+	} else {
+		if (blocked) {
+			showChat({
+				username: 'Admin',
+				usertext: 'You have been blocked for 5 seconds due to spamming play/pause',
+				usertime: getCurrentDateTimeString()
+			});
+		} else {
+			if (vid.paused == 1) {
+				vid.play();
+				usertext.value = 'Playing the video';
+			} else {
+				vid.pause();
+				usertext.value = 'Paused the video';
+			}
 
-		update();
-		usertext.value = '';
+			update();
+			usertext.value = '';
 
-		blocked = true;
-		setTimeout(function() {
-			blocked = false;
-		}, 5000);
+			blocked = true;
+			setTimeout(() => {
+				blocked = false;
+			}, 5000);
+		}
 	}
 }
 
 /**
  * Gets a date string. Used for formatting chat DIVs
- * @returns date string
+ * @returns date string in UTC
  */
 function getCurrentDateTimeString() {
-	const now = new Date();
-	const Y = now.getFullYear();
-	const m = String(now.getMonth() + 1).padStart(2, '0'); // Months are zero-based, so add 1
-	const d = String(now.getDate()).padStart(2, '0');
-	const H = String(now.getHours()).padStart(2, '0');
-	const i = String(now.getMinutes()).padStart(2, '0');
-	const s = String(now.getSeconds()).padStart(2, '0');
-
-	return `${Y}-${m}-${d}_${H}x${i}x${s}`;
+    return new Date().toISOString().replace(/[:.T]/g, '-').replace(/[Z]/g, '');
 }
+
+/**
+ * Event listener for video. Fired when video is clicked. Toggles Play/Pause state
+ */
+vid.addEventListener('click', () => {
+	playPause();
+});
+
+document.addEventListener('click', (event) => {
+	//console.log(document.activeElement.id);
+});
 
 /**
  * Event listener for keydown events to handle media controls and user input (chat) based on focus
  */
-document.addEventListener('keydown', function(event) {
+document.addEventListener('keydown', (event) => {
 	switch (document.activeElement.id) {
 		case 'usertext':
-			if (event.key === 'Enter' && usertext.value.trim() !== '') {
+			if ((event.key === 'Enter' || event.code === 'Enter') && usertext.value.trim() !== '') {
 				update();
 			}
 			break;
 		default:
-			console.log('Pressed "' + event.code + '" on "' + document.activeElement.id + '"');
+			if(debug) console.log('Pressed "' + event.code + '"/"' + event.key + '" on "' + document.activeElement.id + '"');
 			switch (event.code) {
 				case 'Space':
 					playPause();
@@ -207,31 +196,26 @@ document.addEventListener('keydown', function(event) {
 });
 
 /**
- * Event listener for video. Fired when video is clicked. Toggles Play/Pause state
+ * Only pause video if it's NOT in fullscreen mode
  */
-vid.addEventListener('click', function() {
-	playPause();
-});
-
-vid.addEventListener('timeupdate', function() {
-	//update();
-});
-
-chatInput.addEventListener('mouseenter', function() {
-	chatInput.focus();
-	this.style.opacity = '1'; // Set opacity to 100% when mouse enters
-});
-
-chatInput.addEventListener("focusout", function() {
-	this.style.opacity = '0.05'; // Set opacity to 1% when mouse leaves
+document.addEventListener('fullscreenchange', () => {
+    if (document.fullscreenElement === vid) {
+        //console.log('Video is in fullscreen mode.');
+		fullscreen = true;
+    } else {
+        //console.log('Video is not in fullscreen mode.');
+		fullscreen = false;
+    }
 });
 
 /**
  * Gets data from the server every seond, then pauses/plays and sets time accordingly
  */
-setInterval(function() {
-	getData();
+setInterval(() => {
+	if (!fullscreen) {
+		console.log('Getting data');
+		getData();
+	}
 }, 1000);
 
-resize();
-getData(); //get initial state
+init();

@@ -1,4 +1,8 @@
-<!DOCTYPE html> 
+<?php
+	if (empty($_GET['v'])) {
+		header('Location: index.php');
+	}
+?><!DOCTYPE html> 
 <html lang="en">
 <head>
 	<meta charset="utf-8">
@@ -10,8 +14,9 @@
 	<div id="container">
 		<div id="video-container">
 			<video id="vid" controls>
-				<source id="source" type="video/mp4" src="<?php echo 'movies/' . $_GET['v']; ?>">
-				<track id="track" label="English" srclang="en" kind="subtitles" default>
+				<source src="<?php echo 'movies/' . $_GET['v'] . '.mp4'; ?>" id="source" type="video/mp4">
+				<track src="<?php echo 'movies/' . $_GET['v'] . '.vtt'; ?>" id="track" label="English" srclang="en"
+					kind="subtitles" default>
 				Your browser does not support HTML5 video.
 			</video>
 		</div>

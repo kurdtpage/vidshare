@@ -36,8 +36,14 @@ body {
 #username {
 	width: 18%;
 	display: inline-block;
+	background-color: black;
+    color: white;
+	border: none;
 }
 #usertext {
 	width: 78%;
 	display: inline-block;
+	background-color: black;
+    color: white;
+	border: none;
 }
