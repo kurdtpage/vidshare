@@ -6,6 +6,9 @@
 		exit("Invalid directory path: $directory");
 	}
 
+	/**
+	 * Gets the first x number of words from a sentence
+	 */
 	function extractWords($str = '', $numWords = 3)
 	{
 		// Split the string into words
@@ -36,36 +39,46 @@
 		}
 	});
 
-	sort($allfiles, SORT_NATURAL | SORT_FLAG_CASE); //case insentivie sort
-
 	foreach ($allfiles as $file) {
 		$extension = pathinfo($file, PATHINFO_EXTENSION);
 		$vttFilename = $directory . pathinfo($directory . $file, PATHINFO_FILENAME) . '.vtt';
 
 		if ($extension == 'mp4') {
-			$files[] = $file;
+			//get time of video
+			// Execute ffmpeg command to get video duration
+			$cmd = 'ffmpeg -i "' . $directory . $file . '" 2>&1 | grep Duration';
+			$output = null;
+			exec($cmd, $output);
 
-			$sql = 'INSERT IGNORE INTO movie (moviename, paused, currentTime) VALUES (:v, 0, 0)';
-			$data = ['v' => $file];
-			$stmt = $pdo->run($sql, $data);
-		} elseif (in_array($extension, $media_extensions)) {
-			/* The <video> element can only read .mp4 media files, so need to convert it */
-			// Assuming $file contains the input file path
-			$inputFile = $directory . $file;
-			$outputFile = $directory . pathinfo($directory . $file, PATHINFO_FILENAME) . '.mp4';
-
-			if (file_exists($outputFile)) {
-				// Add the output file to the list if successful
-				$files[] = $file;
-				unlink($inputFile);
-			} else {
-				// Command to execute ffmpeg in the background
-				$command = "ffmpeg -i '$inputFile' '$outputFile' >/dev/null 2>&1 &"; //this will use 100% CPU for 10 minutes per file!!!!!!
-
-				// Open a process to execute the command
-				$process = proc_open($command, [], $pipes);
-				break;
+			// Parse the output to extract the duration
+			$duration = 0;
+			foreach ($output as $line) {
+				if (preg_match('/Duration: (\d+):(\d+):(\d+\.\d+)/', $line, $matches)) {
+					$hours = intval($matches[1]);
+					$minutes = intval($matches[2]);
+					$seconds = floatval($matches[3]);
+					$duration = $hours * 3600 + $minutes * 60 + $seconds;
+					$durationNice = ($hours > 0 ? $hours . ':' : '') .
+						str_pad($minutes, 2, '0', STR_PAD_LEFT) . ':' .
+						str_pad(round($seconds), 2, '0', STR_PAD_LEFT);
+					break;
+				}
 			}
+
+			//insert into database
+			$sql = 'INSERT IGNORE INTO `movie` (moviename, paused, currentTime, totalTime)
+				VALUES (:v, 0, 0, :duration)';
+			$data = [
+				'v' => $file,
+				'duration' => $duration,
+			];
+			$stmt = $pdo->run($sql, $data);
+
+			$files[] = [
+				'name' => $directory . $file,
+				'durationNice' => $durationNice,
+				'duration' => $duration,
+			];
 		} elseif ($extension == 'srt' && !file_exists($vttFilename)) {
 			/* The <video> element can only read .vtt subtitles files, and not .srt, so need to convert it */
 			// Read the contents of the file
@@ -100,8 +113,30 @@
 				// Write the new contents back to the file with .vtt extension
 				file_put_contents($vttFilename, $outputText);
 			}
+		} elseif (in_array($extension, $media_extensions)) {
+			/* The <video> element can only read .mp4 media files, so need to convert it */
+			// Assuming $file contains the input file path
+			$inputFile = $directory . $file;
+			$outputFile = $directory . pathinfo($directory . $file, PATHINFO_FILENAME) . '.mp4';
+
+			if (file_exists($outputFile)) {
+				// Add the output file to the list if successful
+				unlink($inputFile);
+			} else {
+				// Command to execute ffmpeg in the background
+				$command = "ffmpeg -i '$inputFile' '$outputFile' >/dev/null 2>&1 &"; //this will use 100% CPU for 10 minutes per file!!!!!!
+
+				// Open a process to execute the command
+				$process = proc_open($command, [], $pipes);
+				break;
+			}
 		}
 	}
+
+	//sort($files, SORT_NATURAL | SORT_FLAG_CASE); //case insentivie sort
+	usort($files, function($a, $b) {
+		return strcasecmp($a['name'], $b['name']); //case insentivie sort
+	});
 ?><!DOCTYPE html>
 <html lang="en">
 <head>
@@ -115,20 +150,21 @@
 <body>
 	<div style="margin:0; padding:0">
 		<?php foreach ($files as $file) {
+			$file = str_replace($directory, '', $file);
 			$friendlyName = str_replace(
 				['.', '_', '[', ']', '-', 'mp4', '  '],
 				[' ', ' ', ' ', ' ', ' ', ''   , ' ' ],
-				$file);
+				$file['name']);
 			$nameid = str_replace(' ', '', $friendlyName); ?>
-			<div class="card" onclick="watch('<?php echo $file; ?>');">
-				<img class="card-img-top" id="<?php echo $nameid; ?>" alt="<?php echo $friendlyName; ?>" src="img/movie.png">
+			<div class="card" onclick="watch('<?php echo str_replace('.mp4', '', $file['name']); ?>');">
+				<img class="card-img-top" id="<?php echo $nameid; ?>" alt="<?php echo extractWords($friendlyName, 4); ?>" src="img/movie.png">
+				<div class="duration"><?php echo $file['durationNice']; ?></div>
+				<div class="card-body"><h5 class="card-title"><?php echo $friendlyName; ?></h5></div>
 				<script>
-					// Call the function to fetch thumbnail for each file
 					window.addEventListener('DOMContentLoaded', function() {
-						fetchThumbnail('<?php echo extractWords($friendlyName, 3); ?>', '<?php echo $nameid; ?>');
+						fetchThumbnail('<?php echo extractWords($friendlyName, 4); ?>', '<?php echo $nameid; ?>');
 					});
 				</script>
-				<div class="card-body"><h5 class="card-title"><?php echo $friendlyName; ?></h5></div>				
 			</div>
 		<?php } ?>
 	</div>
