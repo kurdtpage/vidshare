@@ -1,6 +1,5 @@
 body {
 	background-color: #333;
-	max-width: 99.9%;
 	overflow-x: hidden;
 }
 
@@ -20,11 +19,6 @@ body {
 	height: 200px;
 }
 
-.card:hover {
-    text-decoration: underline;
-	font-weight: bold;
-}
-
 .card-img-top {
 	display: flex;
 	justify-content: center;
@@ -35,7 +29,6 @@ body {
 
 	height: 200px;
 	margin: auto;
-	/*max-height: 200px;*/
 
 	z-index: -1;
 }
@@ -46,15 +39,15 @@ body {
 
 .card-body {
 	padding: 0;
-	color: #ccc;
-	text-shadow: 1px 1px black;
+	color: white;
+	text-shadow: 1px 1px 2px black;
 	position: relative;
 	top: -220px;
 	text-align: center;
 }
 
 .duration {
-	color: #ccc;
+	color: white;
 	text-shadow: 1px 1px black;
 	position: relative;
 	top: -30px;

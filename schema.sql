@@ -21,4 +21,4 @@ CREATE TABLE `chat` (
   `usertime` varchar(20) NOT NULL,
   `videotime` decimal(10,6) DEFAULT 0.000000,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=187 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

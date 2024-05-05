@@ -112,14 +112,11 @@ function getData() {
  * Toggle local playing and paused states
  */
 function playPause() {
-	console.log('fullscreen', fullscreen);
 	if (fullscreen) {
-		console.log('vid.paused', vid.paused);
+		//Yes these are reversed. I dont know either. Just go with it
 		if (vid.paused || vid.paused == 1) {
-			console.log('Pausing video');
 			vid.pause();
 		} else {
-			console.log('Playing video');
 			vid.play();
 		}
 	} else {
@@ -174,12 +171,12 @@ document.addEventListener('click', (event) => {
 document.addEventListener('keydown', (event) => {
 	switch (document.activeElement.id) {
 		case 'usertext':
-			if ((event.key === 'Enter' || event.code === 'Enter') && usertext.value.trim() !== '') {
+			if (event.code === 'Enter' && usertext.value.trim() !== '') {
 				update();
 			}
 			break;
 		default:
-			if(debug) console.log('Pressed "' + event.code + '"/"' + event.key + '" on "' + document.activeElement.id + '"');
+			if(debug) console.log('Pressed "' + event.code + '" on "' + document.activeElement.id + '"');
 			switch (event.code) {
 				case 'Space':
 					playPause();
@@ -189,6 +186,9 @@ document.addEventListener('keydown', (event) => {
 					break;
 				case 'ArrowRight':
 					vid.currentTime += 5;
+					break;
+				default:
+					event.preventDefault();
 					break;
 			}
 			break;
@@ -213,7 +213,7 @@ document.addEventListener('fullscreenchange', () => {
  */
 setInterval(() => {
 	if (!fullscreen) {
-		console.log('Getting data');
+		//console.log('Getting data');
 		getData();
 	}
 }, 1000);

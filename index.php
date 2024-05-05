@@ -1,4 +1,78 @@
 <?php
+	require_once 'php/inc/connect.php';
+
+	function niceTime($time)
+	{
+		// Calculate hours
+		$hours = floor($time / 3600);
+		if ($hours == 0) {
+			$hours = '';
+		} else {
+			$hours = $hours . ':';
+		}
+
+		// Calculate remaining seconds after removing hours
+		$remainder = floor($time) % 3600;
+
+		// Calculate minutes
+		$minutes = str_pad(floor($remainder / 60), 2, '0', STR_PAD_LEFT) . ':';
+
+		// Calculate remaining seconds after removing minutes
+		$seconds = str_pad(floor($remainder % 60), 2, '0', STR_PAD_LEFT);
+
+		return "$hours$minutes$seconds";
+	}
+
+	$sql = 'SELECT
+		moviename, totalTime
+	FROM
+		movie
+	ORDER BY moviename
+	';
+	$stmt = $pdo->run($sql);
+?><!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>ShaunTube</title>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" crossorigin="anonymous"
+		integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" rel="stylesheet">
+	<link rel="stylesheet" href="css/index.css">
+</head>
+<body>
+	<div style="margin:0; padding:0">
+		<?php while($movie = $stmt->fetch()) {
+			$moviename = $movie['moviename'];
+			$friendlyName = str_replace(
+				['.', '_', '[', ']', '-', 'mp4', '  '],
+				[' ', ' ', ' ', ' ', ' ', ''   , ' ' ],
+				$moviename);
+			$nameid = str_replace(' ', '', $friendlyName); ?>
+			<div class="card" onclick="watch('<?php echo str_replace('.mp4', '', $moviename); ?>');">
+				<img class="card-img-top" id="<?php echo $nameid; ?>" src="img/movie.png"
+					alt="<?php echo extractWords($friendlyName, 4); ?>">
+				<div class="duration"><?php echo niceTime($movie['totalTime']); ?></div>
+				<div class="card-body"><h5 class="card-title"><?php echo $friendlyName; ?></h5></div>
+				<script>
+					window.addEventListener('DOMContentLoaded', () => {
+						fetchThumbnail('<?php echo extractWords($friendlyName, 4); ?>', '<?php echo $nameid; ?>');
+					});
+				</script>
+			</div>
+		<?php } ?>
+	</div>
+
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+		integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" 
+		crossorigin="anonymous">
+	</script>
+	<script type="application/javascript" src="js/index.js"></script>
+</body>
+</html>
+<!--<?php
+	flush();
+
 	$directory = dirname(__FILE__) . '/movies/'; //must start and end with a slash
 	$media_extensions = ['mkv', 'm4v', 'avi', 'mov', 'flv', 'mpg', 'mpeg']; //these will be converted into .mp4
 
@@ -23,30 +97,14 @@
 		return $result;
 	}
 
-	require_once 'php/inc/connect.php';
-
-	$files = array();
-	$allfiles = scandir($directory);
-	//sort so files ending in .mp4 are first. Want files in $media_extensions to come AFTER the .mp4 files
-	usort($allfiles, function($a, $b) {
-		// Check if $a ends with ".mp4" and $b doesn't
-		if (substr($a, -4) === '.mp4' && substr($b, -4) !== '.mp4') {
-			return -1; // $a should come before $b
-		} elseif (substr($a, -4) !== '.mp4' && substr($b, -4) === '.mp4') {
-			return 1; // $a should come after $b
-		} else {
-			return 0; // Order remains unchanged
-		}
-	});
-
-	foreach ($allfiles as $file) {
+	foreach (scandir($directory) as $file) {
 		$extension = pathinfo($file, PATHINFO_EXTENSION);
 		$vttFilename = $directory . pathinfo($directory . $file, PATHINFO_FILENAME) . '.vtt';
 
 		if ($extension == 'mp4') {
 			//get time of video
 			// Execute ffmpeg command to get video duration
-			$cmd = 'ffmpeg -i "' . $directory . $file . '" 2>&1 | grep Duration';
+			$cmd = "ffmpeg -i '$directory$file' 2>&1 | grep Duration";
 			$output = null;
 			exec($cmd, $output);
 
@@ -58,9 +116,6 @@
 					$minutes = intval($matches[2]);
 					$seconds = floatval($matches[3]);
 					$duration = $hours * 3600 + $minutes * 60 + $seconds;
-					$durationNice = ($hours > 0 ? $hours . ':' : '') .
-						str_pad($minutes, 2, '0', STR_PAD_LEFT) . ':' .
-						str_pad(round($seconds), 2, '0', STR_PAD_LEFT);
 					break;
 				}
 			}
@@ -73,12 +128,6 @@
 				'duration' => $duration,
 			];
 			$stmt = $pdo->run($sql, $data);
-
-			$files[] = [
-				'name' => $directory . $file,
-				'durationNice' => $durationNice,
-				'duration' => $duration,
-			];
 		} elseif ($extension == 'srt' && !file_exists($vttFilename)) {
 			/* The <video> element can only read .vtt subtitles files, and not .srt, so need to convert it */
 			// Read the contents of the file
@@ -112,67 +161,29 @@
 
 				// Write the new contents back to the file with .vtt extension
 				file_put_contents($vttFilename, $outputText);
+				unlink($directory . $file); //delete the .srt file
 			}
 		} elseif (in_array($extension, $media_extensions)) {
 			/* The <video> element can only read .mp4 media files, so need to convert it */
 			// Assuming $file contains the input file path
 			$inputFile = $directory . $file;
+			echo "Found $inputFile\r\n";
 			$outputFile = $directory . pathinfo($directory . $file, PATHINFO_FILENAME) . '.mp4';
 
 			if (file_exists($outputFile)) {
+				echo "The .mp4 exists, so deleting\r\n";
 				// Add the output file to the list if successful
 				unlink($inputFile);
 			} else {
+				echo "Converting to .mp4\r\n";
 				// Command to execute ffmpeg in the background
-				$command = "ffmpeg -i '$inputFile' '$outputFile' >/dev/null 2>&1 &"; //this will use 100% CPU for 10 minutes per file!!!!!!
+				//WARNING: THIS WILL USE 100% CPU FOR 10 MINUTES PER FILE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+				$command = "ffmpeg -i '$inputFile' -map 0:s:0 '$vttFilename' '$outputFile' >/dev/null 2>&1 &";
+				echo "Command: $command\r\n";
 
 				// Open a process to execute the command
 				$process = proc_open($command, [], $pipes);
-				break;
 			}
 		}
 	}
-
-	//sort($files, SORT_NATURAL | SORT_FLAG_CASE); //case insentivie sort
-	usort($files, function($a, $b) {
-		return strcasecmp($a['name'], $b['name']); //case insentivie sort
-	});
-?><!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>ShaunTube</title>
-	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
-		integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-	<link rel="stylesheet" href="css/index.css">
-</head>
-<body>
-	<div style="margin:0; padding:0">
-		<?php foreach ($files as $file) {
-			$file = str_replace($directory, '', $file);
-			$friendlyName = str_replace(
-				['.', '_', '[', ']', '-', 'mp4', '  '],
-				[' ', ' ', ' ', ' ', ' ', ''   , ' ' ],
-				$file['name']);
-			$nameid = str_replace(' ', '', $friendlyName); ?>
-			<div class="card" onclick="watch('<?php echo str_replace('.mp4', '', $file['name']); ?>');">
-				<img class="card-img-top" id="<?php echo $nameid; ?>" alt="<?php echo extractWords($friendlyName, 4); ?>" src="img/movie.png">
-				<div class="duration"><?php echo $file['durationNice']; ?></div>
-				<div class="card-body"><h5 class="card-title"><?php echo $friendlyName; ?></h5></div>
-				<script>
-					window.addEventListener('DOMContentLoaded', function() {
-						fetchThumbnail('<?php echo extractWords($friendlyName, 4); ?>', '<?php echo $nameid; ?>');
-					});
-				</script>
-			</div>
-		<?php } ?>
-	</div>
-
-	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-		integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" 
-		crossorigin="anonymous">
-	</script>
-	<script type="application/javascript" src="js/index.js"></script>
-</body>
-</html>
+?>-->

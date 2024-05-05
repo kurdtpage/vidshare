@@ -15,7 +15,7 @@ function fetchThumbnail(friendlyName, nameid) {
 			}
 		}
 	};
-	xhr.open('GET', 'php/thumbnail.php?query=' + encodeURIComponent(friendlyName), true);
+	xhr.open('GET', 'php/thumbnail.php?q=' + encodeURIComponent(friendlyName), true);
 	xhr.send();
 }
 
