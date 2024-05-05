@@ -24,6 +24,7 @@ FROM
 WHERE
 	moviename like :q
 ORDER by
+	dateAdded,
 	moviename
 ';
 $data = [

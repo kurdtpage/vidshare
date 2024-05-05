@@ -28,7 +28,9 @@
 			totalTime
 		FROM
 			movie
-		ORDER BY moviename
+		ORDER BY
+			dateAdded,
+			moviename
 	';
 	$stmt = $pdo->run($sql);
 ?><!DOCTYPE html>
@@ -125,8 +127,11 @@
 			}
 
 			//insert into database
-			$sql = 'INSERT IGNORE INTO `movie` (moviename, paused, currentTime, totalTime)
-				VALUES (:v, 0, 0, :duration)';
+			$sql = 'INSERT IGNORE INTO `movie` (
+				moviename, paused, currentTime, totalTime, dateAdded
+			) VALUES (
+				:v, 0, 0, :duration, now()
+			)';
 			$data = [
 				'v' => $file,
 				'duration' => $duration,

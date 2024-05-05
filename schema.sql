@@ -8,6 +8,7 @@ CREATE TABLE `movie` (
   `paused` int(1) NOT NULL DEFAULT 0,
   `currentTime` decimal(10,6) NOT NULL DEFAULT 0.000000,
   `totalTime` decimal(10,6) DEFAULT 0.000000,
+  `dateAdded` timestamp NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   UNIQUE KEY `movie_unique` (`moviename`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
