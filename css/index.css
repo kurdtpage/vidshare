@@ -3,6 +3,21 @@ body {
 	overflow-x: hidden;
 }
 
+#searchdiv {
+	width: 100vw;
+}
+
+#searchinput {
+	background-color: black;
+	color: white;
+	width: 100%;
+	border: none;
+}
+
+#grid {
+	margin-top: 20px;
+}
+
 .card {
 	background: transparent;
 	margin: 0.5rem;

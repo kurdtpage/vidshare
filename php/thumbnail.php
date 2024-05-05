@@ -13,8 +13,8 @@ $html = file_get_contents($url, false, null, 0, 100000);
 
 if (preg_match_all('/<img[^>]+src="([^"]+)"[^>]*>/', $html, $matches)) {
 	$imageUrls = $matches[1];
-	if (is_array($imageUrls) && count($imageUrls) >= 3) {
-		echo $imageUrls[2]; //first one is the page logo
+	if (is_array($imageUrls) && count($imageUrls) >= 2) {
+		echo $imageUrls[1]; //first one is the page logo
 	} else {
 		echo '';
 	}

@@ -24,10 +24,11 @@
 	}
 
 	$sql = 'SELECT
-		moviename, totalTime
-	FROM
-		movie
-	ORDER BY moviename
+			moviename,
+			totalTime
+		FROM
+			movie
+		ORDER BY moviename
 	';
 	$stmt = $pdo->run($sql);
 ?><!DOCTYPE html>
@@ -41,7 +42,10 @@
 	<link rel="stylesheet" href="css/index.css">
 </head>
 <body>
-	<div style="margin:0; padding:0">
+	<div id="searchdiv" class="fixed-top">
+		<input type="text" placeholder="Search..." id="searchinput">
+	</div>
+	<div id="grid">
 		<?php while($movie = $stmt->fetch()) {
 			$moviename = $movie['moviename'];
 			$friendlyName = str_replace(
