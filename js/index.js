@@ -1,28 +1,50 @@
-// Define a function to fetch thumbnails asynchronously
+/**
+ * Gets thumbnail images
+ * @param {string} friendlyName Text to search for
+ * @param {string} nameid This id will be replaced by the image. <img id="nameid" src="">
+ */
 function fetchThumbnail(friendlyName, nameid) {
-	const xhr = new XMLHttpRequest();
-	xhr.onreadystatechange = function() {
-		if (xhr.readyState === XMLHttpRequest.DONE) {
-			if (xhr.status === 200) {
-				// On successful response, add thumbnail to the container
-				const thumbnailUrl = xhr.responseText;
-
-				if (thumbnailUrl != '' && document.getElementById(nameid) !== null) {
-					document.getElementById(nameid).src = thumbnailUrl;
-				}
-			} else {
-				console.error('Error fetching thumbnail:', xhr.statusText);
+	if (!window.location.search) {
+		return;
+	}
+	
+	const baseDir = 'https://www.google.com';
+	const q = encodeURIComponent(friendlyName);
+	const url = `${baseDir}/search?as_q=${q}&imgar=w&udm=2`; //wide image search
+	
+	fetch(url)
+		.then(response => response.text())
+		.then(html => {
+			const matches = html.matchAll(/<img[^>]+src="([^"]+)"[^>]*>/g);
+			const imageUrls = [];
+			for (const match of matches) {
+				imageUrls.push(match[1]);
 			}
-		}
-	};
-	xhr.open('GET', 'php/thumbnail.php?q=' + encodeURIComponent(friendlyName), true);
-	xhr.send();
+		
+			if (imageUrls.length >= 2) { //first one is the page logo
+				//console.log(imageUrls[1]);
+				document.getElementById(nameid).src = imageUrls[1];
+			}
+		})
+		.catch(error => {
+			console.error(error);
+		});	  
 }
 
+/**
+ * Redirects to a video file
+ * @param {string} file Filename of video to watch. Does not end in .mp4
+ */
 function watch (file) {
 	window.location = `watch.php?v=${file}`;
 }
 
+/**
+ * Gets some words from the start of a sentence
+ * @param {string} str The string to reduce
+ * @param {int} numWords Number of words to return
+ * @returns 
+ */
 function extractWords(str = '', numWords = 3) {
 	// Split the string into words
 	const words = str.split(' ');
@@ -36,6 +58,11 @@ function extractWords(str = '', numWords = 3) {
 	return result;
 }
 
+/**
+ * Converts seconds into hh:mm:ss format
+ * @param {datetime} time Number of seconds since 1970
+ * @returns {string} A nicely formatted time
+ */
 function niceTime(time) {
 	// Calculate hours
 	let hours = Math.floor(time / 3600);
@@ -54,6 +81,9 @@ function niceTime(time) {
 }
 
 let timeoutId;
+/**
+ * When someone searches for something
+ */
 document.getElementById('searchinput').addEventListener('keyup', (event) => {
 	clearTimeout(timeoutId);
 	const q = document.getElementById('searchinput').value;
