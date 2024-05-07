@@ -148,7 +148,7 @@
 				$lines = explode("\n", $inputText);
 
 				// Reformat each line
-				$outputText = '';
+				$outputText = "WEBVTT\r\n\r\n";
 				foreach ($lines as $line) {
 					if (preg_match('/^\d+\s*$/', $line)) {
 						// Chapter number
@@ -164,9 +164,6 @@
 						$outputText .= "\r\n";
 					}
 				}
-
-				// Add WEBVTT header
-				$outputText = 'WEBVTT' . "\r\n\r\n" . $outputText;
 
 				// Write the new contents back to the file with .vtt extension
 				file_put_contents($vttFilename, $outputText);
