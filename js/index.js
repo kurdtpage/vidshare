@@ -4,10 +4,6 @@
  * @param {string} nameid This id will be replaced by the image. <img id="nameid" src="">
  */
 function fetchThumbnail(friendlyName, nameid) {
-	if (!window.location.search) {
-		return;
-	}
-	
 	const baseDir = 'https://www.google.com';
 	const q = encodeURIComponent(friendlyName);
 	const url = `${baseDir}/search?as_q=${q}&imgar=w&udm=2`; //wide image search
@@ -132,3 +128,85 @@ document.getElementById('searchinput').addEventListener('keyup', (event) => {
 		}, 1000); // Wait for 1 second before making the request
 	}
 });
+
+/**
+ * Drag and drop
+ * @param {object} evt Event object
+ */
+function handleFileSelect(evt) {
+	evt.stopPropagation();
+	evt.preventDefault();
+
+	const files = evt.dataTransfer.files; // FileList object.
+
+	// files is a FileList of File objects. List some properties.
+	const output = [];
+	for (let i = 0, f; f = files[i]; i++) {
+		output.push('<li><strong>', f.name, '</strong> (', f.type || 'n/a', ') - ',
+			f.size, ' bytes, last modified: ',
+			f.lastModifiedDate ? f.lastModifiedDate.toLocaleDateString() : 'n/a',
+			'</li>');
+		uploadFile(f);
+	}
+	document.getElementById('list').innerHTML = '<ul>' + output.join('') + '</ul>';
+}
+
+/**
+ * Uploads a file
+ * @param {file} file The file
+ */
+function uploadFile(file) {
+	//show progress bar
+	document.getElementsByClassName('wrap-circles')[0].style.display = 'flex';
+	const url = 'php/upload.php';
+	const formData = new FormData();
+
+	formData.append('fileToUpload', file);
+
+	const xhr = new XMLHttpRequest();
+	xhr.open('POST', url, true);
+	xhr.onload = function() {
+		if (xhr.status === 200) {
+			const response = JSON.parse(xhr.response);
+			if (response.ok) {
+				console.log("Upload successful!");
+			} else {
+				alert(response.error);
+			}
+
+			//hide progress bar
+			document.getElementsByClassName('wrap-circles')[0].style.display = 'none';
+		} else {
+			alert("Error uploading files. Please try again.");
+		}
+	};
+	xhr.upload.onprogress = e => {
+		let percentComplete = 50;
+
+		if (e.lengthComputable) {
+			percentComplete = (e.loaded / e.total) * 100;
+		}
+
+		const inner = document.getElementById('inner');
+		const circle = document.getElementById('circle');
+		circle.style.backgroundImage = `conic-gradient(white ${percentComplete}%, black 0)`;
+		inner.innerText = `${Math.round(percentComplete)}%`;
+
+	};
+	xhr.send(formData);
+}
+
+/**
+ * This fires when a user drags a file over the div, but has not dropped yet
+ * @param {object} evt Event object
+ */
+function handleDragOver(evt) {
+	evt.stopPropagation();
+	evt.preventDefault();
+	evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
+}
+
+// Setup the dnd listeners.
+const dropZone = document.getElementById('grid');
+dropZone.addEventListener('dragover', handleDragOver, false);
+dropZone.addEventListener('drop', handleFileSelect, false);

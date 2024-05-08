@@ -1,2 +1,4 @@
 php/inc/credentials.php
 movies/*
+php/uploads/*
+uploads/*
