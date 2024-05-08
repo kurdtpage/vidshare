@@ -91,7 +91,7 @@ document.getElementById('searchinput').addEventListener('keyup', (event) => {
 					if (xhr.status === 200) {
 						const response = JSON.parse(xhr.responseText);
 						if (response.ok) {
-							console.log(response.videos);
+							if(debug) console.log(response.videos);
 							const grid = document.getElementById('grid');
 							grid.innerHTML = '';
 							response.videos.forEach(video => {
@@ -140,15 +140,15 @@ function handleFileSelect(evt) {
 	const files = evt.dataTransfer.files; // FileList object.
 
 	// files is a FileList of File objects. List some properties.
-	const output = [];
 	for (let i = 0, f; f = files[i]; i++) {
-		output.push('<li><strong>', f.name, '</strong> (', f.type || 'n/a', ') - ',
-			f.size, ' bytes, last modified: ',
-			f.lastModifiedDate ? f.lastModifiedDate.toLocaleDateString() : 'n/a',
-			'</li>');
-		uploadFile(f);
+		if(debug) console.log(f);
+		// Check if the file is a video file
+		if (f.type.startsWith('video/')) {
+			uploadFile(f);
+		} else {
+			alert('Sorry only video files are allowed.');
+		}
 	}
-	document.getElementById('list').innerHTML = '<ul>' + output.join('') + '</ul>';
 }
 
 /**
@@ -173,12 +173,12 @@ function uploadFile(file) {
 			} else {
 				alert(response.error);
 			}
-
-			//hide progress bar
-			document.getElementsByClassName('wrap-circles')[0].style.display = 'none';
 		} else {
 			alert("Error uploading files. Please try again.");
 		}
+
+		//hide progress bar
+		document.getElementsByClassName('wrap-circles')[0].style.display = 'none';
 	};
 	xhr.upload.onprogress = e => {
 		let percentComplete = 50;

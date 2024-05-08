@@ -52,7 +52,6 @@
 			<div class="inner" id="inner">0%</div>
 		</div>
 	</div>
-	<output id="list"></output>
 	<div id="grid">
 		<?php while($movie = $stmt->fetch()) {
 			$moviename = $movie['moviename'];
