@@ -4,6 +4,7 @@
  * @param {string} nameid This id will be replaced by the image. <img id="nameid" src="">
  */
 function fetchThumbnail(friendlyName, nameid) {
+	//first try via client, might get CORS error
 	const baseDir = 'https://www.google.com';
 	const q = encodeURIComponent(friendlyName);
 	const url = `${baseDir}/search?as_q=${q}&imgar=w&udm=2`; //wide image search
@@ -24,7 +25,25 @@ function fetchThumbnail(friendlyName, nameid) {
 		})
 		.catch(error => {
 			console.error(error);
-		});	  
+			//failed via client, now try via server
+			const xhr = new XMLHttpRequest();
+			xhr.onreadystatechange = function() {
+				if (xhr.readyState === XMLHttpRequest.DONE) {
+					if (xhr.status === 200) {
+						// On successful response, add thumbnail to the container
+						const thumbnailUrl = xhr.responseText;
+
+						if (thumbnailUrl != '' && document.getElementById(nameid) !== null) {
+							document.getElementById(nameid).src = thumbnailUrl;
+						}
+					} else {
+						console.error('Error fetching thumbnail:', xhr.statusText);
+					}
+				}
+			};
+			xhr.open('GET', 'php/thumbnail.php?q=' + encodeURIComponent(friendlyName), true);
+			xhr.send();
+		});
 }
 
 /**
