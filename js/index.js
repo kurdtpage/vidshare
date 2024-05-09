@@ -1,3 +1,5 @@
+const debug = true;
+
 /**
  * Gets thumbnail images
  * @param {string} friendlyName Text to search for
@@ -23,18 +25,22 @@ function fetchThumbnail(friendlyName, nameid) {
 				document.getElementById(nameid).src = imageUrls[1];
 			}
 		})
-		.catch(error => {
-			console.error(error);
+		.catch(() => {
 			//failed via client, now try via server
 			const xhr = new XMLHttpRequest();
 			xhr.onreadystatechange = function() {
 				if (xhr.readyState === XMLHttpRequest.DONE) {
 					if (xhr.status === 200) {
+						const response = JSON.parse(xhr.responseText);
 						// On successful response, add thumbnail to the container
-						const thumbnailUrl = xhr.responseText;
+						if (response.ok) {
+							const thumbnailUrl = response.thumb;
 
-						if (thumbnailUrl != '' && document.getElementById(nameid) !== null) {
-							document.getElementById(nameid).src = thumbnailUrl;
+							if (thumbnailUrl != '' && document.getElementById(nameid) !== null) {
+								document.getElementById(nameid).src = thumbnailUrl;
+							}
+						} else {
+							console.error(response.error);
 						}
 					} else {
 						console.error('Error fetching thumbnail:', xhr.statusText);
@@ -155,6 +161,7 @@ document.getElementById('searchinput').addEventListener('keyup', (event) => {
 function handleFileSelect(evt) {
 	evt.stopPropagation();
 	evt.preventDefault();
+	if(debug) console.log(evt);
 
 	const files = evt.dataTransfer.files; // FileList object.
 
