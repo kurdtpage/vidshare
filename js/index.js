@@ -1,4 +1,4 @@
-const debug = true;
+const debug = false;
 
 /**
  * Gets thumbnail images
@@ -108,50 +108,50 @@ let timeoutId;
 document.getElementById('searchinput').addEventListener('keyup', (event) => {
 	clearTimeout(timeoutId);
 	const q = document.getElementById('searchinput').value;
-	if (q != '') {
-		timeoutId = setTimeout(() => {
-			const xhr = new XMLHttpRequest();
-			xhr.onreadystatechange = function() {
-				if (xhr.readyState === XMLHttpRequest.DONE) {
-					if (xhr.status === 200) {
-						const response = JSON.parse(xhr.responseText);
-						if (response.ok) {
-							if(debug) console.log(response.videos);
-							const grid = document.getElementById('grid');
-							grid.innerHTML = '';
-							response.videos.forEach(video => {
-								const moviename = video.moviename;
-								const friendlyName = moviename
-									.replace(/\./g, ' ')
-									.replace(/_/g, ' ')
-									.replace(/\[/g, ' ')
-									.replace(/\]/g, ' ')
-									.replace(/-/g, ' ')
-									.replace(/mp4/g, '')
-									.replace(/\s+/g, ' ');
-								const nameid = friendlyName.replace(' ', '');
-								const newdiv = document.createElement('div');
-								newdiv.className = 'card';
-								newdiv.onclick = function() { watch(moviename.replace('.mp4', '')); };
-								newdiv.innerHTML = `
-									<img class="card-img-top" id="${nameid}" src="img/movie.png"
-										alt="${extractWords(friendlyName, 4)}">
-									<div class="duration">${niceTime(video.totalTime)}</div>
-									<div class="card-body"><h5 class="card-title">${friendlyName}</h5></div>
-								`;
-								grid.appendChild(newdiv);
-								fetchThumbnail(extractWords(friendlyName, 4), nameid);
-							});
-						}
-					} else {
-						console.error('Error searching for "' + q + '":', xhr.statusText);
+	
+	timeoutId = setTimeout(() => {
+		const xhr = new XMLHttpRequest();
+		xhr.onreadystatechange = function() {
+			if (xhr.readyState === XMLHttpRequest.DONE) {
+				if (xhr.status === 200) {
+					const response = JSON.parse(xhr.responseText);
+					if (response.ok) {
+						if(debug) console.log(response.videos);
+						const grid = document.getElementById('grid');
+						grid.innerHTML = '';
+						response.videos.forEach(video => {
+							const moviename = video.moviename;
+							const friendlyName = moviename
+								.replace(/\./g, ' ')
+								.replace(/_/g, ' ')
+								.replace(/\[/g, ' ')
+								.replace(/\]/g, ' ')
+								.replace(/-/g, ' ')
+								.replace(/mp4/g, '')
+								.replace(/\s+/g, ' ');
+							const nameid = friendlyName.replace(' ', '');
+							const newdiv = document.createElement('div');
+							newdiv.className = 'card';
+							newdiv.onclick = function() { watch(moviename.replace('.mp4', '')); };
+							newdiv.innerHTML = `
+								<img class="card-img-top" id="${nameid}" src="img/movie.png"
+									alt="${extractWords(friendlyName, 4)}">
+								<div class="duration">${niceTime(video.totalTime)}</div>
+								<div class="card-body"><h5 class="card-title">${friendlyName}</h5></div>
+							`;
+							grid.appendChild(newdiv);
+							fetchThumbnail(extractWords(friendlyName, 4), nameid);
+						});
 					}
+				} else {
+					console.error('Error searching for "' + q + '":', xhr.statusText);
 				}
-			};
-			xhr.open('GET', 'php/search.php?q=' + q, true);
-			xhr.send();
-		}, 1000); // Wait for 1 second before making the request
-	}
+			}
+		};
+
+		xhr.open('GET', 'php/search.php?q=' + q, true);
+		xhr.send();
+	}, 1000); // Wait for 1 second before making the request
 });
 
 /**
@@ -161,9 +161,13 @@ document.getElementById('searchinput').addEventListener('keyup', (event) => {
 function handleFileSelect(evt) {
 	evt.stopPropagation();
 	evt.preventDefault();
-	if(debug) console.log(evt);
 
 	const files = evt.dataTransfer.files; // FileList object.
+
+	if (debug) {
+		console.log(evt);
+		console.log(files);
+	}
 
 	// files is a FileList of File objects. List some properties.
 	for (let i = 0, f; f = files[i]; i++) {
@@ -215,8 +219,14 @@ function uploadFile(file) {
 
 		const inner = document.getElementById('inner');
 		const circle = document.getElementById('circle');
-		circle.style.backgroundImage = `conic-gradient(white ${percentComplete}%, black 0)`;
-		inner.innerText = `${Math.round(percentComplete)}%`;
+
+		if (percentComplete == 100) {
+			circle.style.backgroundImage = `conic-gradient(green ${percentComplete}%, black 0)`;
+			inner.innerText = 'Finalizing';
+		} else {
+			circle.style.backgroundImage = `conic-gradient(white ${percentComplete}%, black 0)`;
+			inner.innerText = `${Math.round(percentComplete)}%`;
+		}
 
 	};
 	xhr.send(formData);

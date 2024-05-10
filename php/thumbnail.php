@@ -1,6 +1,6 @@
 <?php
 
-$debug = true;
+$debug = false;
 $folder = 'img/';
 
 $response = [

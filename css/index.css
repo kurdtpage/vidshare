@@ -1,3 +1,7 @@
+:root {
+	--card-width: 24.7%;
+}
+
 body {
 	background-color: #333;
 	overflow-x: hidden;
@@ -27,9 +31,9 @@ body {
 	display: inline-block;
 	vertical-align: top;
 	
-	min-width: 24.8%;
-	width: 24.8%;
-	max-width: 24.8%;
+	min-width: var(--card-width);
+	width: var(--card-width);
+	max-width: var(--card-width);
 
 	height: 200px;
 }

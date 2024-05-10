@@ -1,4 +1,4 @@
-const debug = true; //extra spam in the console
+const debug = false; //extra spam in the console
 const v = new URLSearchParams(window.location.search).get('v');
 const container = document.getElementById('video-container');
 const vid = document.getElementById('vid');

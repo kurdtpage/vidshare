@@ -60,7 +60,8 @@ if ($_FILES['fileToUpload']['size'] > $maxSize) {
 		} else {
 			if (move_uploaded_file($_FILES['fileToUpload']['tmp_name'], $target_file)) {
 				//TODO: Add to database, convert, etc
-				$response['error'] = 'The video ' . htmlspecialchars(basename( $_FILES['fileToUpload']['name'])) . ' has been successfully uploaded.';
+				$response['error'] = 'The video ' . htmlspecialchars(basename( $_FILES['fileToUpload']['name'])) .
+					' has been successfully uploaded.';
 				$response['ok'] = true;
 			} else {
 				$response['error'] = 'Sorry, there was an error uploading your video. Please try again.';

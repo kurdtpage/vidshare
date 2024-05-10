@@ -5,7 +5,7 @@ $debug = false;
 $response = ['ok' => false];
 if ($debug) $response['get'] = $_GET;
 
-if (empty($_GET['q'])) {
+if (!isset($_GET['q'])) {
 	$response['error'] = 'Missing data';
 	echo json_encode($response);
 	exit;
@@ -14,6 +14,10 @@ if (empty($_GET['q'])) {
 require_once 'inc/connect.php';
 
 $q = '%' . $_GET['q'] . '%';
+
+if ($q == '%%') {
+	$q = '%';
+}
 
 //get movie
 $sql = 'SELECT
