@@ -1,6 +1,6 @@
 <?php
 
-$debug = false;
+$debug = true;
 
 $response = ['ok' => false];
 if ($debug) $response['get'] = $_GET;
@@ -15,7 +15,7 @@ require_once 'inc/connect.php';
 
 $q = '%' . $_GET['q'] . '%';
 
-if ($q == '%%') {
+if ($q == '%%' || $q == '%null%') {
 	$q = '%';
 }
 

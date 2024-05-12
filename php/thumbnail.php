@@ -1,11 +1,11 @@
 <?php
 
 $debug = false;
-$folder = 'img/';
+$folder = 'img/'; //Needs to end in a slash
 
 $response = [
 	'ok' => false,
-	'thumb' => $folder . 'movie.png' //default
+	'thumb' => $folder . 'movie.png' //default image
 ];
 
 if ($debug) {

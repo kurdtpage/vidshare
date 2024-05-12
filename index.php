@@ -1,39 +1,4 @@
-<?php
-	require_once 'php/inc/connect.php';
-
-	function niceTime($time)
-	{
-		// Calculate hours
-		$hours = floor($time / 3600);
-		if ($hours == 0) {
-			$hours = '';
-		} else {
-			$hours = $hours . ':';
-		}
-
-		// Calculate remaining seconds after removing hours
-		$remainder = floor($time) % 3600;
-
-		// Calculate minutes
-		$minutes = str_pad(floor($remainder / 60), 2, '0', STR_PAD_LEFT) . ':';
-
-		// Calculate remaining seconds after removing minutes
-		$seconds = str_pad(floor($remainder % 60), 2, '0', STR_PAD_LEFT);
-
-		return "$hours$minutes$seconds";
-	}
-
-	$sql = 'SELECT
-			moviename,
-			totalTime
-		FROM
-			movie
-		ORDER BY
-			dateAdded,
-			moviename
-	';
-	$stmt = $pdo->run($sql);
-?><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 	<meta charset="utf-8">
@@ -52,27 +17,7 @@
 			<div class="inner" id="inner">0%</div>
 		</div>
 	</div>
-	<div id="grid">
-		<?php while($movie = $stmt->fetch()) {
-			$moviename = $movie['moviename'];
-			$friendlyName = str_replace(
-				['.', '_', '[', ']', '-', 'mp4', '  '],
-				[' ', ' ', ' ', ' ', ' ', ''   , ' ' ],
-				$moviename);
-			$nameid = str_replace(' ', '', $friendlyName); ?>
-			<div class="card" onclick="watch('<?php echo str_replace('.mp4', '', $moviename); ?>');">
-				<img class="card-img-top" id="<?php echo $nameid; ?>" src="img/movie.png"
-					alt="<?php echo extractWords($friendlyName, 4); ?>">
-				<div class="duration"><?php echo niceTime($movie['totalTime']); ?></div>
-				<div class="card-body"><h5 class="card-title"><?php echo $friendlyName; ?></h5></div>
-				<script>
-					window.addEventListener('DOMContentLoaded', () => {
-						fetchThumbnail('<?php echo extractWords($friendlyName, 4); ?>', '<?php echo $nameid; ?>');
-					});
-				</script>
-			</div>
-		<?php } ?>
-	</div>
+	<div id="grid"></div>
 
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
 		integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" 
@@ -81,9 +26,7 @@
 	<script type="application/javascript" src="js/index.js"></script>
 </body>
 </html>
-<!--<?php
-	flush();
-
+<!-- <?php
 	$directory = dirname(__FILE__) . '/movies/'; //must start and end with a slash
 	$media_extensions = ['mkv', 'm4v', 'avi', 'mov', 'flv', 'mpg', 'mpeg']; //these will be converted into .mp4
 
@@ -107,6 +50,8 @@
 
 		return $result;
 	}
+
+	require_once 'php/connect.php';
 
 	foreach (scandir($directory) as $file) {
 		$extension = pathinfo($file, PATHINFO_EXTENSION);
@@ -197,4 +142,4 @@
 			}
 		}
 	}
-?>-->
+?> -->

@@ -80,25 +80,82 @@ function extractWords(str = '', numWords = 3) {
 }
 
 /**
- * Converts seconds into hh:mm:ss format
- * @param {datetime} time Number of seconds since 1970
+ * Converts seconds into 15 minute intervals
+ * @param {number} time Number of seconds
  * @returns {string} A nicely formatted time
  */
 function niceTime(time) {
 	// Calculate hours
 	let hours = Math.floor(time / 3600);
-	hours = hours === 0 ? '' : hours + ':';
+	hours = hours === 0 ? '' : hours + ' hour ';
 
 	// Calculate remaining seconds after removing hours
 	let remainder = Math.floor(time) % 3600;
 
-	// Calculate minutes
-	const minutes = String(Math.floor(remainder / 60)).padStart(2, '0') + ':';
+	// Calculate minutes, rounding to the nearest 15-minute interval
+	let minutes = Math.round(remainder / 60 / 15) * 15;
+	minutes = minutes <= 1 ? '' : minutes + ' minutes';
 
-	// Calculate remaining seconds after removing minutes
-	const seconds = String(Math.floor(remainder % 60)).padStart(2, '0');
+	return `${hours}${minutes}`;
+}
 
-	return `${hours}${minutes}${seconds}`;
+/**
+ * Refreshes the page with video files
+ */
+function refresh() {
+	//priority is search input is #1, URL is #2
+	let q = new URLSearchParams(window.location.search).get('s'); //this might get overwritten
+	const searchinput = document.getElementById('searchinput').value;
+	if (searchinput != '') {
+		q = searchinput;
+	}
+
+	const xhr = new XMLHttpRequest();
+	xhr.onreadystatechange = function() {
+		if (xhr.readyState === XMLHttpRequest.DONE) {
+			if (xhr.status === 200) {
+				const response = JSON.parse(xhr.responseText);
+				if (response.ok && typeof response.videos !== null) {
+					if(debug) console.log(response.videos);
+					const grid = document.getElementById('grid');
+					grid.innerHTML = '';
+					response.videos.forEach(video => {
+						const moviename = video.moviename;
+						const friendlyName = moviename
+							.replace(/\./g, ' ') //period
+							.replace(/_/g, ' ') //underscore
+							.replace(/\[/g, ' ') //square bracket left
+							.replace(/\]/g, ' ') //square bracket right
+							.replace(/\(/g, ' ') //curved bracket left
+							.replace(/\)/g, ' ') //curved bracket right
+							.replace(/-/g, ' ') //minus
+							.replace(/mp4/g, '') //mp4
+							.replace(/\s+/g, ' '); //whitespace
+						const nameid = friendlyName.replace(' ', '');
+						const newdiv = document.createElement('div');
+						newdiv.className = 'card';
+						newdiv.onclick = function() {
+							watch(moviename.replace('.mp4', ''));
+						};
+						newdiv.innerHTML = `
+							<img class="card-img-top" id="${nameid}" src="img/movie.png"
+								alt="${extractWords(friendlyName, 4)}">
+							<div class="card-body"><h5 class="card-title">${friendlyName}</h5></div>
+							<div class="duration">${niceTime(video.totalTime)}</div>
+						`;
+						grid.appendChild(newdiv);
+						fetchThumbnail(extractWords(friendlyName, 4), nameid);
+					});
+				} else {
+					console.error(response.error);
+				}
+			} else {
+				console.error('Error searching for "' + q + '":', xhr.statusText);
+			}
+		}
+	};
+	xhr.open('GET', 'php/search.php?q=' + q, true);
+	xhr.send();
 }
 
 let timeoutId;
@@ -107,50 +164,8 @@ let timeoutId;
  */
 document.getElementById('searchinput').addEventListener('keyup', (event) => {
 	clearTimeout(timeoutId);
-	const q = document.getElementById('searchinput').value;
-	
 	timeoutId = setTimeout(() => {
-		const xhr = new XMLHttpRequest();
-		xhr.onreadystatechange = function() {
-			if (xhr.readyState === XMLHttpRequest.DONE) {
-				if (xhr.status === 200) {
-					const response = JSON.parse(xhr.responseText);
-					if (response.ok) {
-						if(debug) console.log(response.videos);
-						const grid = document.getElementById('grid');
-						grid.innerHTML = '';
-						response.videos.forEach(video => {
-							const moviename = video.moviename;
-							const friendlyName = moviename
-								.replace(/\./g, ' ')
-								.replace(/_/g, ' ')
-								.replace(/\[/g, ' ')
-								.replace(/\]/g, ' ')
-								.replace(/-/g, ' ')
-								.replace(/mp4/g, '')
-								.replace(/\s+/g, ' ');
-							const nameid = friendlyName.replace(' ', '');
-							const newdiv = document.createElement('div');
-							newdiv.className = 'card';
-							newdiv.onclick = function() { watch(moviename.replace('.mp4', '')); };
-							newdiv.innerHTML = `
-								<img class="card-img-top" id="${nameid}" src="img/movie.png"
-									alt="${extractWords(friendlyName, 4)}">
-								<div class="duration">${niceTime(video.totalTime)}</div>
-								<div class="card-body"><h5 class="card-title">${friendlyName}</h5></div>
-							`;
-							grid.appendChild(newdiv);
-							fetchThumbnail(extractWords(friendlyName, 4), nameid);
-						});
-					}
-				} else {
-					console.error('Error searching for "' + q + '":', xhr.statusText);
-				}
-			}
-		};
-
-		xhr.open('GET', 'php/search.php?q=' + q, true);
-		xhr.send();
+		refresh();
 	}, 1000); // Wait for 1 second before making the request
 });
 
@@ -246,3 +261,8 @@ function handleDragOver(evt) {
 const dropZone = document.getElementById('grid');
 dropZone.addEventListener('dragover', handleDragOver, false);
 dropZone.addEventListener('drop', handleFileSelect, false);
+
+document.addEventListener('DOMContentLoaded', function(event) {
+    refresh();
+	document.getElementById('searchinput').focus();
+});
