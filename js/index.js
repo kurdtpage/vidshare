@@ -117,7 +117,6 @@ function refresh() {
 				const response = JSON.parse(xhr.responseText);
 				if (response.ok && typeof response.videos !== null) {
 					if(debug) console.log(response.videos);
-					const grid = document.getElementById('grid');
 					grid.innerHTML = '';
 					response.videos.forEach(video => {
 						const moviename = video.moviename;
@@ -158,22 +157,11 @@ function refresh() {
 	xhr.send();
 }
 
-let timeoutId;
-/**
- * When someone searches for something
- */
-document.getElementById('searchinput').addEventListener('keyup', (event) => {
-	clearTimeout(timeoutId);
-	timeoutId = setTimeout(() => {
-		refresh();
-	}, 1000); // Wait for 1 second before making the request
-});
-
 /**
  * Drag and drop
  * @param {object} evt Event object
  */
-function handleFileSelect(evt) {
+function fileDrop(evt) {
 	evt.stopPropagation();
 	evt.preventDefault();
 
@@ -251,18 +239,29 @@ function uploadFile(file) {
  * This fires when a user drags a file over the div, but has not dropped yet
  * @param {object} evt Event object
  */
-function handleDragOver(evt) {
+function fileDragOver(evt) {
 	evt.stopPropagation();
 	evt.preventDefault();
 	evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
 }
 
-// Setup the dnd listeners.
-const dropZone = document.getElementById('grid');
-dropZone.addEventListener('dragover', handleDragOver, false);
-dropZone.addEventListener('drop', handleFileSelect, false);
+let timeoutId;
+/**
+ * When someone searches for something
+ */
+document.getElementById('searchinput').addEventListener('keyup', (event) => {
+	clearTimeout(timeoutId);
+	timeoutId = setTimeout(() => {
+		refresh();
+	}, 1000); // Wait for 1 second before making the request
+});
 
 document.addEventListener('DOMContentLoaded', function(event) {
     refresh();
 	document.getElementById('searchinput').focus();
 });
+
+const grid = document.getElementById('grid');
+// Setup the dnd listeners.
+grid.addEventListener('dragover', fileDragOver, false);
+grid.addEventListener('drop', fileDrop, false);

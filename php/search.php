@@ -1,6 +1,6 @@
 <?php
 
-$debug = true;
+$debug = false;
 
 $response = ['ok' => false];
 if ($debug) $response['get'] = $_GET;
